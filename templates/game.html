@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Spotify Lyric Guesser</title>
+    <style>
+        h1 {
+            font-family: Arial, sans-serif;
+        }
+        
+        .gameButton {
+            background-color: #04AA6D; /* Green */
+            border: none;
+            color: white;
+            padding: 5px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 20px;
+            border-radius: 8px;
+          }
+        .formText {
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            font-size: 20px;
+          }
+        .center {
+            margin: auto;
+            width: 50%;
+            padding: 10px;
+          }
+        .formBox {
+            color: black;
+            font-family: Arial, sans-serif;
+            text-align: left;
+            font-size: 20px;
+        }
+        .correctGuess {
+            color: darkgreen;
+            
+            font-family: Arial, sans-serif;
+            text-align: center;
+            font-size: 20px;
+            padding: 1px 10%;
+        }
+        .incorrectGuess {
+            color: darkred;
+
+            font-family: Arial, sans-serif;
+            text-align: center;
+            font-size: 20px;
+            padding: 4px 52px;
+         }
+        .cellBackg {
+            background-color: lightgrey;
+        }
+        
+    </style>
+    
+</head>
+<body style="background-color:#383838">
+    <h1 align="center" style="color:white">Spotify Lyric Guessing Game</h1>
+    <p align="center" style="color:white">Heavily inspired by lastguess.net</p>
+    <div class="center">
+        <p align="center" style="color:white">Playlist: {{ roundData['playlist'] }}</p>
+        <h1 align="center" style="color:white">"{{ roundData['lyric'] }}"</h1>
+        <table class ='formText'>
+            <form class='formText' action="/guess" method="POST">
+                <tr>
+                    <td>
+
+                        <label for="name" class='formText'> Name </label>
+                    </td>
+                {% if roundData['nameAttempt'] != 'Correct' and  roundData['nameAttempt'] < roundData['allowedGuesses']%}
+                <td>
+                    <input type="text" id="name" name="name" class='formBox'>
+                </td>
+                <td>
+                    <label for="name">{{ roundData['nameAttempt'] }}/{{ roundData['allowedGuesses'] }} </label>
+                </td>
+                {% elif roundData['nameAttempt'] == 'Correct' %}
+                <td class=".cellBackg">
+                    <label for="name" class="correctGuess"> {{correctGuesses['name']}} </label>
+                </td>
+                {% else %}
+                <td class=".cellBackg">
+                    <label for="name" class="incorrectGuess"> Out Of Guesses </label>
+                </td>
+                {% endif %}
+                </tr>
+                <tr>
+                
+                <td><label for="artist">Artist </label></td>
+                {% if roundData['artistAttempt'] != 'Correct' and roundData['artistAttempt'] < roundData['allowedGuesses']%}
+                    <td><input type="text" id="artist" name="artist" class='formBox'></td>
+                    <td><label for="artist">{{ roundData['artistAttempt'] }}/{{ roundData['allowedGuesses'] }}</label></td>
+                {% elif roundData['artistAttempt'] == 'Correct' %}
+                <td class=".cellBackg"><label for="artist" class="correctGuess"> {{correctGuesses['artist']}} </label></td>
+                {% else %}
+                <td class=".cellBackg"> <label for="artist" class="incorrectGuess"> Out Of Guesses </label></td>
+                {% endif %}
+                </tr>
+                <tr>
+
+                <td><label for="nextLine">Next line </label></td>
+                {% if roundData['nextLineAttempt'] != 'Correct' and roundData['nextLineAttempt'] < roundData['allowedGuesses']%}
+                <td class=".cellBackg"> <input type="text" id="nextLine" name="nextLine" class='formBox'></td>
+                 <td> <label for="nextLine">{{ roundData['nextLineAttempt'] }}/{{ roundData['allowedGuesses'] }} </label></td>
+                {% elif roundData['nextLineAttempt'] == 'Correct' %}
+                <<td class=".cellBackg">><label for="nextLine" class="correctGuess"> {{correctGuesses['nextLine']}} </label></td>
+                {% else %}
+                <<td class=".cellBackg">><label for="nextLine" class="incorrectGuess"> Out Of Guesses </label></td>
+                {% endif %}
+                </tr>
+                <tr>
+                    <td><label for="submit">Submit </label></td>
+                    <td><input type="submit" name="button" value="{{roundData['button']}}" class="gameButton"></td>
+                    <td><input type="submit" name="button" value="Give Up" class="gameButton" ></td>
+                </tr>
+            </form>
+        </table>
+
+          <p align="center" style="color:white">Score: {{ roundData['score'] }}</p>
+          <p align="center" style="color:white">Round {{ roundData['currentRound'] }} of {{ roundData['totalRounds'] }}</p>
+    </div>
+
+
+</body>
+</html>
