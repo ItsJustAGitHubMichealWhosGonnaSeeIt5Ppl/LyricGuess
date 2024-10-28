@@ -24,11 +24,6 @@ SPOTIFY_SECRET = os.getenv('SPOTIFY_SECRET')
 GENIUS_TOKEN = os.getenv('GENIUS_TOKEN')
 
 # User variables (will be added to a setup page)
-rounds = 10
-minLyricLength = 5
-players = 1
-
-
 
 # Authorise spotify and Genius
 
@@ -67,7 +62,9 @@ def getPlaylist(playlistID):
     return tracks
 
 
-class player:
+    
+
+class game: # Track a game
     def __init__(self,tracks,totalRounds):
         self.tracks = tracks.copy()
         self.shuffledTracks = self._shuffleTracks(tracks,totalRounds)
@@ -125,7 +122,6 @@ class player:
         return self.currentLyric
     
     def guess(self,guessData):
-        
         for field, guess in guessData.items():
             if field != 'button' and guess != '':
                 if field == 'nextLine':
@@ -166,8 +162,11 @@ class player:
             
         }
         return roundInfo, self.correctGuesses
-        
 
+
+def createPlayer():
+    pass
+       
 
 app = Flask(__name__)
 
@@ -180,20 +179,45 @@ def home():
     return render_template('home.html',message=reason)
 
 
-@app.route("/start", methods=['GET', 'POST'])
-def start():
-    global p1
+@app.route("/setup", methods=['GET', 'POST'])
+def setupGame():
+    global setupFormData
     if request.method == 'POST':
+        setupFormData = request.form.to_dict()
+        if len(setupFormData.keys()) < 2:
+             return redirect(url_for('.home',reason='please set gamemode and player count'))
+        elif setupFormData['gameMode'] in ['vs','coop'] and setupFormData['playerCount'].isnumeric():
+            setupFormData['playerCount'] = int(setupFormData['playerCount']) # Convert to int
+            return render_template('settings.html',data = setupFormData)
+        
+        else:
+            return redirect(url_for('.home',reason='please set player count'))
+        
+    else:
+        return redirect(url_for('.home'))
+
+@app.route("/start", methods=['GET', 'POST'])
+
+def start():
+    global setupFormData
+    if request.method == 'POST':
+        
         formData = request.form.to_dict()
+        
+        for player in range(0, setupFormData['playerCount']):
+            
         
         playerTracks = getPlaylist(formData['playlistID'])
         if playerTracks == None:
             return redirect(url_for('.home',reason='Invalid Playlist ID'))
         
-        p1 = player(playerTracks,5)
+        
+        p1 = game(playerTracks,5)
         p1.createRound()
         roundInfo = p1.roundInformation()
-    return render_template('game.html',roundData = roundInfo[0],correctGuesses=roundInfo[1])
+        return render_template('game.html',roundData = roundInfo[0],correctGuesses=roundInfo[1])
+    else:
+        return redirect(url_for('.home',reason=''))
 
 
 @app.route("/guess", methods=['POST'])

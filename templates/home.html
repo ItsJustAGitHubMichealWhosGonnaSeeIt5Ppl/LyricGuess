@@ -1,64 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <title>Spotify Lyric Guesser</title>
-    <style>
-        h1 {
-            font-family: Arial, sans-serif;
-        }
-        .startButton {
-            background-color: #04AA6D; /* Green */
-            border: none;
-            color: white;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 32px;
-            border-radius: 8px;
-          }
-        .center {
-            margin: 0;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            -ms-transform: translate(-50%, -50%);
-            transform: translate(-50%, -50%);
-          }
-        .formText {
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            font-size: 20px;
-          }
-        .center {
-            margin: auto;
-            width: 50%;
-            padding: 10px;
-          }
-        .formBox {
-            color: black;
-            font-family: Arial, sans-serif;
-            text-align: left;
-            font-size: 20px;
-        }
-        
-    </style>
-</head>
-<body style="background-color:#383838">
-    <h1 align="center" style="color:white">Spotify Lyric Guessing Game</h1>
-    <p align="center" style="color:white">Heavily inspired by lastguess.net</p>
-    <div class="formText">
-        <p align="center" style="color:red">{{ message }}</p>
-        <form class="center" action='/start' method="POST">
-            <label for="fname">Name:</label>
-            <input type="text" id="name" name="name"><br>
-            <label for="lname">Spotify Playlist</label>
-            <input type="text" id="playlistID" name="playlistID"><br>
-            <input type="submit" value="Start" class="startButton">
-          </form> 
-    </div>
-
-
-</body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}"> 
+  </head>
+  <body>
+    <h1 align="center" >Spotify Lyric Guessing Game</h1>
+    <p align="center">Heavily inspired by lastguess.net</p>
+    <p align="center" style="color:red">{{ message }}</p> {# Display errors (if any) #}
+    <table class ='tableCenter'>
+      <form class="center" action='/setup' method="POST">
+        <tr>
+          <td>
+            <label for="gameMode">Game Mode:</label>
+          </td>
+          <td>
+            <input type="radio" id="vs" name="gameMode" value="vs">
+            <label for="vs">VS</label>
+            <input type="radio" id="coop" name="gameMode" value="coop">
+            <label for="coop">Co-op</label>
+          </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="playerCount">Number of Players:</label>
+            </td>
+            <td>
+              <input type="playerCount" id="playerCount" name="playerCount">
+            </td>
+          </tr>
+          <tr>
+          <td colspan="2">
+            <input type="submit" value="Lets Go!" class="gameButton">
+          </td>
+          </tr>
+          </form>
+    </table>
+    
+    <table class ='safeMarginBox'>
+      <h2>Modes Explained</h2>
+      <tr>
+        <td><h3>VS Mode</h3></td>
+        <td><h3>Co-op Mode</h3></td>
+      </tr>
+      <tr>
+        <td><p>In VS mode, each player will put in their own list of music.  Players will then compete to get the highest score.</p></td>
+        <td><p>In Co-op mode, all players will work together to guess songs from a single group playlist.</p></td>
+      </tr>
+    </table>
+  </body>
 </html>

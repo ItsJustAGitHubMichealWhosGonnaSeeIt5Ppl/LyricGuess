@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Spotify Lyric Guesser</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+</head>
+<body style="background-color:#383838">
+    <h3>Game Settings</h3>
+  <table>
+    <form action='/start' method="POST">
+        <tr>
+            <td>
+                <label for="rounds" class='formText'> Rounds </label>
+            </td>
+            <td>
+                <input type="text" id="rounds" name="rounds" class='formBox'>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="guessesPer" class='formText'> Guesses Per Round </label>
+            </td>
+            <td>
+                <input type="text" id="guessesPer" name="guessesPer" class='formBox'>
+            </td>
+        </tr>
+        {% if data['gameMode'] == 'coop' %}
+        <tr>
+            <td>
+                <label for="playlist" class='formText'> Playlist Link/ID </label>
+            </td>
+            <td>
+                <input type="text" id="playlist" name="playlist" class='formBox'>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="=2">
+                <h3>Player Settings</h3>
+            </td>
+        </tr>
+            {% for a in range(0,data['playerCount']) %}
+            {% set pName = 'player' + a|string %}
+        <tr>
+            <td>
+                <label for="{{ pName }}" class='formText'> Player {{ a }} Name </label>
+            </td>
+            <td>
+                <input type="text" id="{{ pName }}" name="{{ pName }}"  class='formBox'>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="playlist{{ pName }}" class='formText'> Playlist Link/ID </label>
+            </td>
+            <td>
+                <input type="text" id="playlist{{ pName }}" name="playlist{{ pName }}" class='formBox'>
+            </td>
+        </tr>
+            {% endfor %}
+        {% endif %}
+        <tr>
+            <td colspan="2">
+              <input type="submit" value="Start" class="gameButton">
+            </td>
+        </tr>
+    </form>
+  </table>

@@ -2,61 +2,7 @@
 <html lang="en">
 <head>
     <title>Spotify Lyric Guesser</title>
-    <style>
-        h1 {
-            font-family: Arial, sans-serif;
-        }
-        
-        .gameButton {
-            background-color: #04AA6D; /* Green */
-            border: none;
-            color: white;
-            padding: 5px 15px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 20px;
-            border-radius: 8px;
-          }
-        .formText {
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            font-size: 20px;
-          }
-        .center {
-            margin: auto;
-            width: 50%;
-            padding: 10px;
-          }
-        .formBox {
-            color: black;
-            font-family: Arial, sans-serif;
-            text-align: left;
-            font-size: 20px;
-        }
-        .correctGuess {
-            color: darkgreen;
-            
-            font-family: Arial, sans-serif;
-            text-align: center;
-            font-size: 20px;
-            padding: 1px 10%;
-        }
-        .incorrectGuess {
-            color: darkred;
-
-            font-family: Arial, sans-serif;
-            text-align: center;
-            font-size: 20px;
-            padding: 4px 52px;
-         }
-        .cellBackg {
-            background-color: lightgrey;
-        }
-        
-    </style>
-    
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
 </head>
 <body style="background-color:#383838">
     <h1 align="center" style="color:white">Spotify Lyric Guessing Game</h1>
@@ -64,7 +10,7 @@
     <div class="center">
         <p align="center" style="color:white">Playlist: {{ roundData['playlist'] }}</p>
         <h1 align="center" style="color:white">"{{ roundData['lyric'] }}"</h1>
-        <table class ='formText'>
+        <table class ='tableCenter'>
             <form class='formText' action="/guess" method="POST">
                 <tr>
                     <td>
