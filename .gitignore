@@ -2,3 +2,5 @@
 /.cache
 /.env
 /.venv
+__pycache__/backend.cpython-312.pyc
+cachedLyrics.db
