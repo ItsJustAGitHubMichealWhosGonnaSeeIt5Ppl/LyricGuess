@@ -9,7 +9,7 @@
     <p align="center" style="color:white">Heavily inspired by lastguess.net</p>
     <div class="center">
         <p align="center" style="color:white">Playlist: {{ roundData['playlist'] }}</p>
-        <h1 align="center" style="color:white">"{{ roundData['lyric'] }}"</h1>
+        <h1 align="center" style="color:white">"{{ roundData['trackDetails']['lyric'] }}"</h1>
         <table class ='tableCenter'>
             <form class='formText' action="/guess" method="POST">
                 <tr>
@@ -17,16 +17,16 @@
 
                         <label for="name" class='formText'> Name </label>
                     </td>
-                {% if roundData['nameAttempt'] != 'Correct' and  roundData['nameAttempt'] < roundData['allowedGuesses']%}
+                {% if roundData['correctGuesses']['name'] == None and roundData['remainingGuesses']['name'] < roundData['totalGuesses']%}
                 <td>
                     <input type="text" id="name" name="name" class='formBox'>
                 </td>
                 <td>
-                    <label for="name">{{ roundData['nameAttempt'] }}/{{ roundData['allowedGuesses'] }} </label>
+                    <label for="name">{{ roundData['remainingGuesses']['name'] }}/{{ roundData['totalGuesses'] }} </label>
                 </td>
-                {% elif roundData['nameAttempt'] == 'Correct' %}
+                {% elif roundData['correctGuesses']['name'] != None %}
                 <td class=".cellBackg">
-                    <label for="name" class="correctGuess"> {{correctGuesses['name']}} </label>
+                    <label for="name" class="correctGuess"> {{ roundData['correctGuesses']['name'] }} </label>
                 </td>
                 {% else %}
                 <td class=".cellBackg">
@@ -37,11 +37,11 @@
                 <tr>
                 
                 <td><label for="artist">Artist </label></td>
-                {% if roundData['artistAttempt'] != 'Correct' and roundData['artistAttempt'] < roundData['allowedGuesses']%}
+                {% if roundData['correctGuesses']['artist'] == None and roundData['remainingGuesses']['artist'] < roundData['totalGuesses']%}
                     <td><input type="text" id="artist" name="artist" class='formBox'></td>
-                    <td><label for="artist">{{ roundData['artistAttempt'] }}/{{ roundData['allowedGuesses'] }}</label></td>
-                {% elif roundData['artistAttempt'] == 'Correct' %}
-                <td class=".cellBackg"><label for="artist" class="correctGuess"> {{correctGuesses['artist']}} </label></td>
+                    <td><label for="artist">{{ roundData['remainingGuesses']['artist'] }}/{{ roundData['totalGuesses'] }}</label></td>
+                {% elif roundData['correctGuesses']['artist'] != None %}
+                <td class=".cellBackg"><label for="artist" class="correctGuess"> {{ roundData['correctGuesses']['artist'] }} </label></td>
                 {% else %}
                 <td class=".cellBackg"> <label for="artist" class="incorrectGuess"> Out Of Guesses </label></td>
                 {% endif %}
@@ -49,25 +49,25 @@
                 <tr>
 
                 <td><label for="nextLine">Next line </label></td>
-                {% if roundData['nextLineAttempt'] != 'Correct' and roundData['nextLineAttempt'] < roundData['allowedGuesses']%}
+                {% if roundData['correctGuesses']['nextLine'] == None and roundData['remainingGuesses']['nextLine'] < roundData['totalGuesses']%}
                 <td class=".cellBackg"> <input type="text" id="nextLine" name="nextLine" class='formBox'></td>
-                 <td> <label for="nextLine">{{ roundData['nextLineAttempt'] }}/{{ roundData['allowedGuesses'] }} </label></td>
-                {% elif roundData['nextLineAttempt'] == 'Correct' %}
-                <<td class=".cellBackg">><label for="nextLine" class="correctGuess"> {{correctGuesses['nextLine']}} </label></td>
+                 <td> <label for="nextLine">{{ roundData['remainingGuesses']['nextLine'] }}/{{ roundData['totalGuesses'] }} </label></td>
+                 {% elif roundData['correctGuesses']['nextLine'] != None %}
+                <td class=".cellBackg"><label for="nextLine" class="correctGuess"> {{ roundData['correctGuesses']['nextLine'] }} </label></td>
                 {% else %}
-                <<td class=".cellBackg">><label for="nextLine" class="incorrectGuess"> Out Of Guesses </label></td>
+                <td class=".cellBackg"><label for="nextLine" class="incorrectGuess"> Out Of Guesses </label></td>
                 {% endif %}
                 </tr>
                 <tr>
                     <td><label for="submit">Submit </label></td>
-                    <td><input type="submit" name="button" value="{{roundData['button']}}" class="gameButton"></td>
+                    <td><input type="submit" name="button" value="{{button['text']}}" class="gameButton"></td>
                     <td><input type="submit" name="button" value="Give Up" class="gameButton" ></td>
                 </tr>
             </form>
         </table>
 
           <p align="center" style="color:white">Score: {{ roundData['score'] }}</p>
-          <p align="center" style="color:white">Round {{ roundData['currentRound'] }} of {{ roundData['totalRounds'] }}</p>
+          <p align="center" style="color:white">Round {{ roundData['round'] }} of {{ roundData['totalRounds'] }}</p>
     </div>
 
 

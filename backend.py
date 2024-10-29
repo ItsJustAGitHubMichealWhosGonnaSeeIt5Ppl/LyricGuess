@@ -72,7 +72,7 @@ def _shuffleTracks(tracks,rounds):
     loop = 0
     roundData = []
     for track in tracks:
-        if loop < rounds:
+        if loop < int(rounds):
             cursor.execute(""" SELECT * FROM cached_lyrics WHERE songID=?""",(track['id'],))
             lyricsFromDB = cursor.fetchone()
             if lyricsFromDB != None:
@@ -110,7 +110,7 @@ class playerSession: # Track a game
         # Game info
         self.playerName = name
         self.totalRounds = len(tracks)
-        self.guessesPerRound = guessesPer
+        self.guessesPerRound = int(guessesPer)
         self.tracks = tracks
         self.round = 1
         self.score = 0
@@ -152,12 +152,18 @@ class playerSession: # Track a game
     
     def guess(self,guessData):
         for field, guess in guessData.items():
+            correct = False
+            if field == 'button':
+                continue
             if guess != '':
-                if guess.lower() == self.currentTrack[field].strip(".,`';").lower():
-                        self.score += self.guessesPerRound - self.guessCounts[field]
-                        self.correctGuesses[field] = self.currentTrack[field]
-                        self.guessCounts[field] =3 # Prevent further guesses
-                        
+                if guess.strip(".,`';- ").lower() == self.currentTrack[field].strip(".,`';- ").lower():
+                    correct = True
+                elif field == 'song' and guess.strip(".,`';- ").lower() == self.currentTrack[field].split('(')[0].strip(".,`';- ").lower():
+                    correct = True
+                if correct == True:
+                    self.score += self.guessesPerRound - self.guessCounts[field]
+                    self.correctGuesses[field] = self.currentTrack[field]
+                    self.guessCounts[field] =3 # Prevent further guesses
                 else:
                     self.guessCounts[field] +=1     
     
@@ -176,7 +182,11 @@ class playerSession: # Track a game
             'trackDetails': self.currentTrack,
             'score': self.score,
             'round': self.round,
+            'totalGuesses': self.guessesPerRound,
             'remainingGuesses': self.guessCounts,
+            'correctGuesses':self.correctGuesses,
+            'totalRounds':self.totalRounds,
+            
         }
         return info
     
