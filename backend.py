@@ -85,7 +85,7 @@ def _shuffleTracks(tracks,rounds):
                 loop += 1
             else:
                 lyrics = genius.search_song(title=track['name'],artist=track['artists'][0])       
-                if lyrics != None: # Skip songs where lyrics can't be found.
+                if lyrics != None and lyrics['artist'] == track['artists'][0] and lyrics['lyrics_state'] == 'complete': # Skip songs where lyrics can't be found.
                     lyrics = lyrics.lyrics
                     lyrics = lyrics.split('\n')  # Create list of each lyric line
                     lyrics.pop(0) # Remove Contributors line
@@ -141,7 +141,12 @@ class playerSession: # Track a game
         
         lyrics = nextTrack['lyrics']
         totalLyrics = len(lyrics)
-        ranNum = random.randint(1,totalLyrics-2)
+        ranLoop = True
+        while ranLoop == True: # Avoid short annoying lyrics
+            ranNum = random.randint(1,totalLyrics-2)
+            if len(lyrics[ranNum].replace('-',' ').split(' ')) > 5:
+                ranLoop = False
+                
         self.currentTrack = {
             'name': nextTrack['name'],
             'artist': nextTrack['artist'],
