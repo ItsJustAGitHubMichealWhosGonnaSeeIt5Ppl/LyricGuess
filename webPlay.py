@@ -68,8 +68,6 @@ def guess():
 
 
 
-
-
 # Start webserver
 if __name__ == '__main__': 
     serve(app, host = 'localhost', port=8888)

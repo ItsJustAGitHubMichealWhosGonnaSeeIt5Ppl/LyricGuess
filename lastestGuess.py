@@ -9,7 +9,10 @@ Allow more configuration of score, etc
 
 """
 # TODO Choose user interface (web?)
-# TODO Setup Genius API stuff
+#TODO if song title is in lyric, don't display
+#TODO print debug info of song
+#TODO thread lyric loading so game can start quicker
+
 from lyricsgenius import Genius
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth

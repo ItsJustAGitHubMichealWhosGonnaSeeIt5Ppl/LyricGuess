@@ -9,6 +9,9 @@ import json
 
 #TODO fix multiplayer modes
 #TODO add sqlite database to track user highscores
+#TODO filter "The" from artist name
+#TODO filter (featuring) from title
+#TODO Filter out apostrophes
 
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
@@ -85,7 +88,7 @@ def _shuffleTracks(tracks,rounds):
                 loop += 1
             else:
                 lyrics = genius.search_song(title=track['name'],artist=track['artists'][0])       
-                if lyrics != None and lyrics['artist'] == track['artists'][0] and lyrics['lyrics_state'] == 'complete': # Skip songs where lyrics can't be found.
+                if lyrics != None and lyrics.artist == track['artists'][0] and lyrics.lyrics_state == 'complete': # Skip songs where lyrics can't be found.
                     lyrics = lyrics.lyrics
                     lyrics = lyrics.split('\n')  # Create list of each lyric line
                     lyrics.pop(0) # Remove Contributors line
@@ -161,9 +164,9 @@ class playerSession: # Track a game
             if field == 'button':
                 continue
             if guess != '':
-                if guess.strip(".,`';- ").lower() == self.currentTrack[field].strip(".,`';- ").lower():
+                if guess.strip(".,`';- ").lower() in self.currentTrack[field].strip(".,`';- ").lower():
                     correct = True
-                elif field == 'song' and guess.strip(".,`';- ").lower() == self.currentTrack[field].split('(')[0].strip(".,`';- ").lower():
+                elif field == 'song' and guess.strip(".,`';-! ").lower() in self.currentTrack[field].split('(')[0].strip(".,`';-! ").lower():
                     correct = True
                 if correct == True:
                     self.score += self.guessesPerRound - self.guessCounts[field]
