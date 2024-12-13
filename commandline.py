@@ -1,6 +1,7 @@
 import backend as backE
 import sys
-
+import logging
+debug = True
 print('Welcome to the commandline version of Spotify Lyric Guessing Game')
 
 def userInput(text,validInputs,timeout=10,**extras): # Timeout after 10 attampts
@@ -41,7 +42,7 @@ if mode in [1,2]:
     
     vPlaylist = False
     while vPlaylist == False:
-        playlist = backE._getPlaylist(userInput('Enter playlist link/ID','any'))
+        playlist = backE._getPlaylist(userInput('Enter playlist link/ID','any'),getLyrics=True) # Will try to cache the entire playlist right now
         if playlist != None:
             vPlaylist = True
             
@@ -50,37 +51,22 @@ elif mode == 3: # Doesn't do anything right now
 
 print('starting game!')
 
-tracks = backE._shuffleTracks(playlist,rounds)
+tracks = backE._shuffleTracks(playlist,rounds,cacheLyrics=False) # False as lyrics are cached from the playlist thing above
 
-session = backE.playerSession(name,guessPerRound,tracks)
+session = backE.playerSession(name,guessPerRound,tracks,debug=debug)
 gameRound = 1
 toolTip = True
 while session.round < session.totalRounds:
-    inf = session.roundInformation()
+    print('\n' * 10) # clear text?
+    inf = session.roundInformation() # update round information
     SongStr = session.correctGuesses['name'] if session.correctGuesses['name'] != None else f'? - {session.guessesPerRound - session.guessCounts['name']} guesses remaining'
     artistStr = session.correctGuesses['artist'] if session.correctGuesses['artist'] != None else f'? - {session.guessesPerRound - session.guessCounts['artist']} guesses remaining'
     nextLineStr = session.correctGuesses['nextLine'] if session.correctGuesses['nextLine'] != None else f'? - {session.guessesPerRound - session.guessCounts['nextLine']} guesses remaining'
     text = f"""
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     Round {session.round} - Score: {session.score}
     Lyric: {inf['trackDetails']['lyric']}
     """
-    if session.roundStatus == 'Active':
+    if session.roundStatus == 'Active': # Create string
         text += f"""
         1. Song Title (Name): {SongStr}
         2. Artist: {artistStr}
@@ -88,8 +74,8 @@ while session.round < session.totalRounds:
         4. Give Up
         """
         if toolTip == True:
-            text += '\nTo guess enter the number, then your guess EG: 1 Stevie Wonder'
-        text += '\nYour Guess:'
+            text += '\nTo guess enter the number, then your guess EG: 2 Stevie Wonder'
+        text += '\nYour Guess: '
     elif session.roundStatus == 'Ended':
         text += f"""
         Song Title (Name): {SongStr}
@@ -99,12 +85,14 @@ while session.round < session.totalRounds:
         When you're ready: 
         """
     guess = input(text)
-    if guess.startswith('1'):
-        session.guess({'name':guess.replace('1 ','')})
+    if len(guess) < 2 and guess !='4':
+        print('not a valid guess')
+    elif guess.startswith('1'):
+        session.guess({'name':guess[1:]})
     elif guess.startswith('2'):
-        session.guess({'artist':guess.replace('2 ','')})
+        session.guess({'artist':guess[1:]})
     elif guess.startswith('3'):
-        session.guess({'nextLine':guess.replace('3 ','')})
+        session.guess({'nextLine':guess[1:]})
     elif guess.startswith('4'):
         if session.roundStatus == 'Ended':
             session.createRound()
