@@ -5,14 +5,18 @@ import os
 import random
 import sqlite3
 import re
+import logging
 import json
+from requests import exceptions as reqExcept
+import concurrent.futures # Threading?
 
 #TODO fix multiplayer modes
 #TODO add sqlite database to track user highscores
 #TODO filter "The" from artist name
 #TODO filter (featuring) from title
 #TODO Filter out apostrophes
-
+#TODO add logging
+#TODO use regex to compare guesses
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
 SPOTIFY_SECRET = os.getenv('SPOTIFY_SECRET')
@@ -24,6 +28,7 @@ scope = "user-library-read"
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope,client_id=SPOTIPY_CLIENT_ID,client_secret=SPOTIFY_SECRET,redirect_uri='http://localhost:8080'))
 genius = Genius(GENIUS_TOKEN,verbose=False)
 
+
 # Cache songs
 
 con = sqlite3.connect("cachedLyrics.db")
@@ -33,9 +38,23 @@ cursor.execute("""CREATE TABLE if NOT EXISTS cached_lyrics(
             lyrics TEXT
         )""")
 
+pool = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
 # Playlist
-def _getPlaylist(playlistID):
+def _getPlaylist(playlistID,getLyrics=False):
+    """Get playlist info, optionally, get lyrics
+
+    Args:
+        playlistID (_type_): Spotify playlist link/ID
+        getLyrics (bool, optional): Get lyrics for playlist items, if used, remember not to cache lyrics if you start a game before its done!. Defaults to False.
+
+    Returns:
+        list: List of tracks
+    """
+    global pool
+    def getAll(): # Loop through all tracks and add them to cache DB
+        for track in tracks: 
+            _getLyrics(track)
     # Basic input validation
     if playlistID.startswith('http'): 
         playlistID = playlistID.split('?si=')[0]
@@ -54,8 +73,6 @@ def _getPlaylist(playlistID):
         tracksList.extend(playlist['items'])
     tracks = []
 
-
-
     for track in tracksList:
         track = track['track'] # Ignore unneeded information
         artists = [artist['name'] for artist in track['artists']]
@@ -65,10 +82,12 @@ def _getPlaylist(playlistID):
             'album': track['album']['name'],
             'id': track['id']
         }]
-
+    if getLyrics: # Get lyrics for all songs
+        pool.submit(getAll)
+        #pool.shutdown(wait=False)
     return tracks
 
-def _shuffleTracks(tracks,rounds):
+def _shuffleTracks(tracks,rounds,cacheLyrics=True):
     database = sqlite3.connect("cachedLyrics.db")
     cursor = database.cursor()
     random.shuffle(tracks)# Shuffle the tracks
@@ -76,40 +95,74 @@ def _shuffleTracks(tracks,rounds):
     roundData = []
     for track in tracks:
         if loop < int(rounds):
-            cursor.execute(""" SELECT * FROM cached_lyrics WHERE songID=?""",(track['id'],))
-            lyricsFromDB = cursor.fetchone()
-            if lyricsFromDB != None:
-                lyrics = json.loads(lyricsFromDB[1])
+            lyrics = _getLyrics(track,cacheLyrics)
+            if lyrics != None:
                 roundData += [{
                 'name': track['name'],
                 'artist': track['artists'][0], # For now, only use the first artist
                 'lyrics': lyrics # Maybe move the song lyric choice to here?
                 }]
+
                 loop += 1
             else:
-                lyrics = genius.search_song(title=track['name'],artist=track['artists'][0])       
-                if lyrics != None and lyrics.artist == track['artists'][0] and lyrics.lyrics_state == 'complete': # Skip songs where lyrics can't be found.
-                    lyrics = lyrics.lyrics
-                    lyrics = lyrics.split('\n')  # Create list of each lyric line
-                    lyrics.pop(0) # Remove Contributors line
-                    lyrics = [line for line in lyrics if line not in [''] and line.startswith(f'See {track['artists'][0]}') == False and line.startswith('(') == False and line.startswith('[') == False] # Remove blank lyrics and things like [Chorus], [Verse 2]
-                    cursor.execute("INSERT OR IGNORE INTO cached_lyrics VALUES(:songID, :lyrics)",(track['id'], json.dumps(lyrics)))
-                    database.commit()
-                    roundData += [{
-                        'name': track['name'],
-                        'artist': track['artists'][0], # For now, only use the first artist
-                        'lyrics': lyrics # Maybe move the song lyric choice to here?
-                    }]
-                    loop += 1
-                else:
-                    continue
+                continue # No matching lyrics
+
         else:
                 break
     return roundData
 
 
+def _getLyrics(track,cache=True):
+    """Get lyrics from internal DB or genius
+
+    Args:
+        track (dict): Custom track object
+        cache (bool, optional): Cache lyrics into the database.  IF YOU HAVE STARTED A FULL CACHE OF A PLAYLIST, MAKE SURE THIS IS FALSE!!!!!!!!
+
+    Returns:
+        list: Lyrics in list form
+    """
+    lyrics = None
+    database = sqlite3.connect("cachedLyrics.db")
+    cursor = database.cursor()
+    cursor.execute(""" SELECT * FROM cached_lyrics WHERE songID=?""",(track['id'],))
+    lyricsFromDB = cursor.fetchone()
+    
+    if lyricsFromDB != None:
+        lyrics = json.loads(lyricsFromDB[1])
+
+    else:
+        fails = 0
+
+        while fails < 10: # Allow 10 failures
+            try:
+                artist = genius.search_artist(track['artists'][0],max_songs=0)
+                lyrics = artist.song(track['name'])
+                break
+            except reqExcept.ReadTimeout:
+                fails +=1
+                continue
+            except AttributeError:
+                fails +=1
+                continue
+                
+        if lyrics != None and lyrics.lyrics_state == 'complete': # Skip songs where lyrics can't be found.
+            lyrics = lyrics.lyrics
+            lyrics = lyrics.split('\n')  # Create list of each lyric line
+            lyrics = [line.replace('\\','') for line in lyrics if line not in [''] and line.startswith(f'See {track['artists'][0]}') == False and line.startswith('(') == False and line.startswith('[') == False] # Remove blank lyrics and things like [Chorus], [Verse 2]
+            if cache: # Hopefully avoids issues of the same track being added twice
+                cursor.execute("INSERT OR IGNORE INTO cached_lyrics VALUES(:songID, :lyrics)",(track['id'], json.dumps(lyrics)))
+                database.commit()
+        else:
+            return None
+    
+    return lyrics
+
 class playerSession: # Track a game
-    def __init__(self,name,guessesPer,tracks):
+    def __init__(self,name,guessesPer,tracks,debug=False):
+        #logger
+        if debug:
+            logging.basicConfig(level='DEBUG')
         # Game info
         self.playerName = name
         self.totalRounds = len(tracks)
@@ -156,10 +209,12 @@ class playerSession: # Track a game
             'lyric': lyrics[ranNum],
             'nextLine': lyrics[ranNum+1],
             }
+        logging.debug(f'Current Song: {self.currentTrack['name']}, next line: {self.currentTrack['nextLine']}')
         
     
     def guess(self,guessData):
         for field, guess in guessData.items():
+            logging.debug(f'COMPARING: Guess: {guess.strip(".,`';-! " if field == 'song'else ".,`';- ").lower()}, Correct Answer: {self.currentTrack[field].strip(".,`';-! " if field == 'song'else ".,`';- ").lower()}. Field: {field}')
             correct = False
             if field == 'button':
                 continue
@@ -169,11 +224,13 @@ class playerSession: # Track a game
                 elif field == 'song' and guess.strip(".,`';-! ").lower() in self.currentTrack[field].split('(')[0].strip(".,`';-! ").lower():
                     correct = True
                 if correct == True:
+                    logging.info('CORRECT GUESS')
                     self.score += self.guessesPerRound - self.guessCounts[field]
                     self.correctGuesses[field] = self.currentTrack[field]
                     self.guessCounts[field] =3 # Prevent further guesses
                 else:
-                    self.guessCounts[field] +=1     
+                    self.guessCounts[field] +=1
+                    logging.info('INCORRECT GUESS')
     
     def endRound(self):
         self.correctGuesses = {
